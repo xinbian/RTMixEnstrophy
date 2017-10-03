@@ -21,10 +21,10 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 
 #specify inout parameters here
 g=1.0
-istep='000001'
 inFile="tests_single_new.h5"
-rhoH=1.0833
-rhoL=1.0
+rhoH=1.0
+rhoL=0.11111111
+Lz=3.2
 #input done
 
 mylist = [parentDir,'/',inFile]
@@ -34,38 +34,63 @@ filepath = delimiter.join(mylist)
 variable = ['PVx','PVy','PVz','PPress', 'Prho']
 h5file = h5py.File(filepath,'r')
 #read dataset dimensions
-mylist = ['Fields/','Prho','/',istep]
+mylist = ['Fields/','Prho','/','002000']
 filepath = delimiter.join(mylist)
 databk = h5file.get(filepath)
 m1 = np.array(databk)
 nz=m1.shape[0]
 ny=m1.shape[1]
 nx=m1.shape[2]
-dz=3.2/nz
+
+dz=Lz/nz
 specout = 1000
-h = np.zeros(len(steps))
 seq = 0
 step = []
-for i in range(721):
+for i in range(141):
     step.append(str((i+1)*specout).zfill(6))
 
+h = np.zeros(len(step))
+ke = np.zeros(len(step))
+pe = np.zeros(len(step))
 #calculate mixing layer width
-for istep in steps:
+for istep in step:
 	delimiter = ''
 	mylist = ['Fields/',variable[4],'/',istep]
 	filepath = delimiter.join(mylist)
 	databk = h5file.get(filepath)
 	rho = np.array(databk)
-	x=np.zeros(nz, ny, nx)
+	x=np.zeros((nz, ny, nx))
 	xMean=np.zeros(nz)
 	x=(rho-rhoL)/(rhoH-rhoL)
 	xMean=x.reshape(nz, ny*nx).mean(axis=1)
 	for i in range(nz):
-		h[seq] = h[seq] + 2*min(xMean(i), 1-xMean(i)) 
+		h[seq] = h[seq] + 2*min(xMean[i], 1-xMean[i]) 
+		#potential energy
+		pe[seq] = pe[seq] + np.sum(rho[i, :, :] * g * i * dz)
+
+
+ 	#kinetic energy
+	mylist = ['Fields/',variable[0],'/',istep]
+	filepath = delimiter.join(mylist)
+	databk = h5file.get(filepath)
+	vx = np.array(databk)
+	mylist = ['Fields/',variable[1],'/',istep]
+	filepath = delimiter.join(mylist)
+	databk = h5file.get(filepath)
+	vy = np.array(databk)
+	mylist = ['Fields/',variable[2],'/',istep]
+	filepath = delimiter.join(mylist)
+	databk = h5file.get(filepath)
+	vz = np.array(databk)
+	ke[seq] = (0.5 * (vx**2 + vy**2 + vz**2) * rho).mean()
+
+
 	seq += 1
 
 
-all_data = np.column_stack(np.asarray(steps),h)
+#nomalize pe
+pe = pe/(nx*ny*nz)
+all_data = np.column_stack((np.asarray(step),h, ke, pe, ke + pe))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 
 h5file.close()
