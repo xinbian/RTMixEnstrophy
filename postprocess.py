@@ -23,7 +23,7 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 g=1.0
 inFile="tests_single_new.h5"
 rhoH=1.0
-rhoL=0.11111111
+rhoL=0.1111
 Lz=3.2
 #input done
 
@@ -32,7 +32,7 @@ delimiter = ''
 filepath = delimiter.join(mylist)
 #nz enlarged only 
 variable = ['PVx','PVy','PVz','PPress', 'Prho']
-h5file = h5py.File(filepath,'r')
+h5file = h5py.File(filepath,'r+')
 #read dataset dimensions
 mylist = ['Fields/','Prho','/','002000']
 filepath = delimiter.join(mylist)
@@ -48,10 +48,14 @@ seq = 0
 step = []
 for i in range(141):
     step.append(str((i+1)*specout).zfill(6))
-
+#initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
 ke = np.zeros(len(step))
 pe = np.zeros(len(step))
+vorx = np.zeros((nz, ny, nx))
+vory = np.zeros((nz, ny, nx))
+vorz = np.zeros((nz, ny, nx))
+enstropy = np.zeros(len(step))  
 #calculate mixing layer width
 for istep in step:
 	delimiter = ''
@@ -67,8 +71,6 @@ for istep in step:
 		h[seq] = h[seq] + 2*min(xMean[i], 1-xMean[i]) 
 		#potential energy
 		pe[seq] = pe[seq] + np.sum(rho[i, :, :] * g * i * dz)
-
-
  	#kinetic energy
 	mylist = ['Fields/',variable[0],'/',istep]
 	filepath = delimiter.join(mylist)
@@ -83,14 +85,26 @@ for istep in step:
 	databk = h5file.get(filepath)
 	vz = np.array(databk)
 	ke[seq] = (0.5 * (vx**2 + vy**2 + vz**2) * rho).mean()
-
-
+	#enstrophy
+	if nx == 1:
+		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
+	else:
+		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
+		vory += np.gradient(vx, dz, axis=0) - np.gradient(vz, dz, axis=2)
+		vorz += np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
+	enstropy[seq] += (vorx**2+vory**2+vorz**2).mean() 
 	seq += 1
+	
+	#test omega
+	mylist = ['Fields/','PomegaX','/',istep]
+	filepath = delimiter.join(mylist)
+	h5file.create_dataset(filepath,data=vorx)
 
 
 #nomalize pe
 pe = pe/(nx*ny*nz)
-all_data = np.column_stack((np.asarray(step),h, ke, pe, ke + pe))
+#output
+all_data = np.column_stack((np.asarray(step),h, ke, pe, ke + pe, enstropy))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 
 h5file.close()
