@@ -5,7 +5,8 @@ mixing layer defination:
 https://search.proquest.com/docview/194682903?pq-origsite=gscholar
 @author: Xin
 """
-
+import pylab
+import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 import os
@@ -46,7 +47,7 @@ dz=Lz/nz
 specout = 1000
 seq = 0
 step = []
-for i in range(141):
+for i in range(131):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
@@ -96,9 +97,9 @@ for istep in step:
 	seq += 1
 	
 	#test omega
-	mylist = ['Fields/','PomegaX','/',istep]
-	filepath = delimiter.join(mylist)
-	h5file.create_dataset(filepath,data=vorx)
+#	mylist = ['Fields/','PomegaX','/',istep]
+#	filepath = delimiter.join(mylist)
+#	h5file.create_dataset(filepath,data=vorx)
 
 
 #nomalize pe
@@ -109,6 +110,22 @@ np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 
 h5file.close()
 
+
+plt.plot(np.asarray(step),h)
+plt.title('mixing layer width vs time step')
+plt.show()
+plt.savefig('mix.eps', format='eps', dpi=1000)
+plt.plot(np.asarray(step),ke , label='KE')
+plt.plot(np.asarray(step),pe, label='PE')
+plt.plot(np.asarray(step),ke+pe,label='KE+PE')
+plt.title('energy vs time step')
+pylab.legend(loc='best')
+plt.show()
+plt.savefig('energy.eps', format='eps', dpi=1000)
+plt.plot(np.asarray(step), enstropy)
+plt.title('enstrophy vs time step')
+plt.show()
+plt.savefig('enstropy.eps', format='eps', dpi=1000)
 #f = open('output.d','w')
 #for zz_ref in range(nz):
 # f.write("%4s\t%10s\n" % (zz_ref, np.mean(m1[zz_ref,:,:])))
