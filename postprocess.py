@@ -33,11 +33,6 @@ filepath = delimiter.join(mylist)
 #nz enlarged only 
 variable = ['PVx','PVy','PVz','PPress', 'Prho']
 h5file = h5py.File(filepath,'r')
-mylist = [parentDir,'/',outFile]
-delimiter = ''
-filepath = delimiter.join(mylist)
-h5new = h5py.File(filepath,'w')
-
 #read dataset dimensions
 mylist = ['Fields/','Prho','/',istep]
 filepath = delimiter.join(mylist)
@@ -47,39 +42,33 @@ nz=m1.shape[0]
 ny=m1.shape[1]
 nx=m1.shape[2]
 dz=3.2/nz
+specout = 1000
+h = np.zeros(len(steps))
+seq = 0
+step = []
+for i in range(721):
+    step.append(str((i+1)*specout).zfill(6))
 
 #calculate mixing layer width
 for istep in steps:
 	delimiter = ''
 	mylist = ['Fields/',variable[4],'/',istep]
 	filepath = delimiter.join(mylist)
-
 	databk = h5file.get(filepath)
-	m1 = np.array(databk)
-	m2=np.zeros((nz/2, ny/2, nx))
-	for k in xrange(nz/2):
-		for j in xrange(ny/2):
-			m2[k, j, :]=(m1[2*k, 2*j, :]+m1[2*k+1, 2*j+1, :])/2
-	h5new.create_dataset(filepath,data=m2)
-# 3D case
-else:
-	for mm in xrange(len(variable)):
-		delimiter = ''
-		mylist = ['Fields/',variable[mm],'/',istep]
-		filepath = delimiter.join(mylist)
-		databk = h5file.get(filepath)
-		m1 = np.array(databk)
-		m2=np.zeros((nz/2, ny/2, nx/2))
-		for k in xrange(nz/2):
-			for j in xrange(ny/2):
-				for i in xrange(nx/2):
-					m2[k, j, i]=(m1[2*k, 2*j, 2*i]+m1[2*k+1, 2*j+1, 2*i+1])/2
-		h5new.create_dataset(filepath,data=m2)
+	rho = np.array(databk)
+	x=np.zeros(nz, ny, nx)
+	xMean=np.zeros(nz)
+	x=(rho-rhoL)/(rhoH-rhoL)
+	xMean=x.reshape(nz, ny*nx).mean(axis=1)
+	for i in range(nz):
+		h[seq] = h[seq] + 2*min(xMean(i), 1-xMean(i)) 
+	seq += 1
 
-	
-	
+
+all_data = np.column_stack(np.asarray(steps),h)
+np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
+
 h5file.close()
-h5new.close()
 
 #f = open('output.d','w')
 #for zz_ref in range(nz):
