@@ -21,11 +21,12 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 #rhoH=1.0833
 
 #specify inout parameters here
+gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
 rhoH=1.0
-rhoL=0.1111
-Lz=3.2
+rhoL=0.6
+Lz=0.8
 #input done
 
 mylist = [parentDir,'/',inFile]
@@ -44,13 +45,14 @@ ny=m1.shape[1]
 nx=m1.shape[2]
 
 dz=Lz/nz
-specout = 1000
+specout = 500
 seq = 0
 step = []
-for i in range(44):
+for i in range(43):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
+ie = np.zeros(len(step))
 ke = np.zeros(len(step))
 pe = np.zeros(len(step))
 vorx = np.zeros((nz, ny, nx))
@@ -86,6 +88,12 @@ for istep in step:
 	databk = h5file.get(filepath)
 	vz = np.array(databk)
 	ke[seq] = (0.5 * (vx**2 + vy**2 + vz**2) * rho).mean()
+	#internal energy
+	mylist = ['Fields/',variable[3],'/',istep]
+	filepath = delimiter.join(mylist)
+	databk = h5file.get(filepath)
+	press = np.array(databk)
+	ie[seq] = ((1/(gamma-1))*press/rho).mean() 
 	#enstrophy
 	if nx == 1:
 		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
@@ -102,10 +110,10 @@ for istep in step:
 #	h5file.create_dataset(filepath,data=vorx)
 
 
-#nomalize pe
+#nomalize pe/calcuate losed pe to this time
 pe = pe/(nx*ny*nz)
 #output
-all_data = np.column_stack((np.asarray(step),h, ke, pe, ke + pe, enstropy))
+all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 
 h5file.close()
@@ -116,8 +124,9 @@ plt.title('mixing layer width vs time step')
 plt.savefig('mix.eps', format='eps', dpi=1000)
 plt.show()
 plt.plot(np.asarray(step),ke , label='KE')
-plt.plot(np.asarray(step),pe, label='PE')
-plt.plot(np.asarray(step),ke+pe,label='KE+PE')
+plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
+plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
+#plt.plot(np.asarray(step),ke+pe,label='KE+PE')
 plt.title('energy vs time step')
 pylab.legend(loc='best')
 plt.savefig('energy.eps', format='eps', dpi=1000)
