@@ -93,7 +93,7 @@ for istep in step:
 	filepath = delimiter.join(mylist)
 	databk = h5file.get(filepath)
 	press = np.array(databk)
-	ie[seq] = ((1/(gamma-1))*press/rho).mean() 
+	ie[seq] = ((1/(gamma-1))*press).mean() 
 	#enstrophy
 	if nx == 1:
 		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
@@ -127,6 +127,7 @@ plt.plot(np.asarray(step),ke , label='KE')
 plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
 plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
 #plt.plot(np.asarray(step),ke+pe,label='KE+PE')
+plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
 plt.title('energy vs time step')
 pylab.legend(loc='best')
 plt.savefig('energy.eps', format='eps', dpi=1000)
@@ -135,6 +136,7 @@ plt.plot(np.asarray(step), enstropy)
 plt.title('enstrophy vs time step')
 plt.savefig('enstropy.eps', format='eps', dpi=1000)
 plt.show()
+
 #f = open('output.d','w')
 #for zz_ref in range(nz):
 # f.write("%4s\t%10s\n" % (zz_ref, np.mean(m1[zz_ref,:,:])))
