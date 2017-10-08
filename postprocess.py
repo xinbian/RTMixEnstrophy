@@ -96,11 +96,11 @@ for istep in step:
 	ie[seq] = ((1/(gamma-1))*press).mean() 
 	#enstrophy
 	if nx == 1:
-		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
+		vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
 	else:
-		vorx += np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
-		vory += np.gradient(vx, dz, axis=0) - np.gradient(vz, dz, axis=2)
-		vorz += np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
+		vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
+		vory = np.gradient(vx, dz, axis=0) - np.gradient(vz, dz, axis=2)
+		vorz = np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
 	enstropy[seq] += (vorx**2+vory**2+vorz**2).mean() 
 	seq += 1
 	
