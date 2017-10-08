@@ -112,6 +112,8 @@ for istep in step:
 
 #nomalize pe/calcuate losed pe to this time
 pe = pe/(nx*ny*nz)
+#normalize h
+h=h*dz
 #output
 all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
