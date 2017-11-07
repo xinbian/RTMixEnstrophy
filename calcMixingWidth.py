@@ -1,17 +1,17 @@
 import numpy as np
 import h5py
 
-file_name = 'tests_multi_ablative_lowerq.h5'
+file_name = 'tests_single_new.h5'
 H5File = h5py.File(file_name, 'r')
 #rho_l = 1.0/3.0
 #rho_h = 1.0
 skip = 10
 
-L_z = 6.4
+L_z = 0.8
 Nz = 512
 dz = L_z/Nz
 
-for x in range(1000, 27000, 1000):
+for x in range(500, 19920, 500):
     rho = H5File['/Fields/Prho/' + str(x).zfill(6)]
     rho = np.array(rho)
     rho = np.transpose(rho)
