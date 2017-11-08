@@ -120,7 +120,6 @@ for istep in step:
 	        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 	else:
-		pass
 		if nx == 1:
 			vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
 		else:
