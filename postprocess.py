@@ -21,7 +21,7 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
-Lz=0.8
+Lz=3.2
 waveLen = 0.4
 CFDmethod = False
 #input done
@@ -59,9 +59,10 @@ vorz = np.zeros((nz, ny, nx))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
 
-CFD_x = Create_matrix_fd2(nx) / dx
-CFD_y = CFD_x
-CFD_z = Create_matrix_fd2(nz) / dz
+if CFDmethod:
+	CFD_x = Create_matrix_fd2(nx) / dx
+	CFD_y = CFD_x
+	CFD_z = Create_matrix_fd2(nz) / dz
 
 
 #calculate mixing layer width
