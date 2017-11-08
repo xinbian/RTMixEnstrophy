@@ -22,6 +22,7 @@ gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
 Lz=0.8
+waveLen = 0.4
 CFDmethod = False
 #input done
 
@@ -45,7 +46,7 @@ specout = 500
 skip = 10
 seq = 0
 step = []
-for i in range(34,39):
+for i in range(5):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
@@ -119,6 +120,7 @@ for istep in step:
 	        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 	else:
+		pass
 		if nx == 1:
 			vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
 		else:
@@ -132,7 +134,7 @@ for istep in step:
 #nomalize pe/calcuate losed pe to this time
 pe = pe*dx*dy*dz
 #normalize h
-h=h*dz
+h=h*dz/waveLen
 #output
 all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
