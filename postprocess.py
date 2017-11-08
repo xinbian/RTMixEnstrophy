@@ -110,7 +110,7 @@ specout = 500
 skip = 10
 seq = 0
 step = []
-for i in range(39):
+for i in range(34,39):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
@@ -121,6 +121,7 @@ vorx = np.zeros((nz, ny, nx))
 vory = np.zeros((nz, ny, nx))
 vorz = np.zeros((nz, ny, nx))
 enstropy = np.zeros(len(step))  
+sum_x = np.zeros(len(step))  
 
 CFD_x = Create_matrix_fd2(nx) / dx
 CFD_y = CFD_x
@@ -171,45 +172,32 @@ for istep in step:
 		vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
 		vory = np.gradient(vx, dz, axis=0) - np.gradient(vz, dz, axis=2)
 		vorz = np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
-	enstropy[seq] += (vorx**2+vory**2+vorz**2).mean() 
-	seq += 1
-
-        Vx = H5File['/Fields/PVx/' + istep]
-        Vy = H5File['/Fields/PVy/' + istep]
-        Vz = H5File['/Fields/PVz/' + istep]
-        Vx = np.array(Vx)
-        Vy = np.array(Vy)
-        Vz = np.array(Vz)
-        Vx = Vx.transpose()
-        Vy = Vy.transpose()
-        Vz = Vz.transpose()
+	enstropy[seq] = 0.5*np.sum(vorx**2+vory**2+vorz**2)*dx*dy*dz 
+#CFD method to calc enstrophy
+        vx = vx.transpose()
+        vy = vy.transpose()
+        vz = vz.transpose()
         
-        dyVx = calc_y_deri(Vx, CFD_y)
-        dzVx = calc_z_deri(Vx, CFD_z)
-        dxVy = calc_x_deri(Vy, CFD_x)
-        dzVy = calc_z_deri(Vy, CFD_z)
-        dxVz = calc_x_deri(Vz, CFD_x)
-        dyVz = calc_y_deri(Vz, CFD_y)
-
+        dyVx = calc_y_deri(vx, CFD_y)
+        dzVx = calc_z_deri(vx, CFD_z)
+        dxVy = calc_x_deri(vy, CFD_x)
+        dzVy = calc_z_deri(vy, CFD_z)
+        dxVz = calc_x_deri(vz, CFD_x)
+        dyVz = calc_y_deri(vz, CFD_y)
         Wx = dyVz - dzVy
         Wy = dzVx - dxVz
         Wz = dxVy - dyVx
-
-        Enstrophy = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
-        sum_x = np.sum(Enstrophy)*dx*dy*dz
-	
+        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
+        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 	#test omega
-#	mylist = ['Fields/','PomegaX','/',istep]
-#	filepath = delimiter.join(mylist)
-#	h5file.create_dataset(filepath,data=vorx)
-
+	seq += 1
 
 #nomalize pe/calcuate losed pe to this time
 pe = pe/(nx*ny*nz)
 #normalize h
 h=h*dz
 #output
-all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x)
+all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 
 h5file.close()

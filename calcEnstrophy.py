@@ -127,6 +127,11 @@ if __name__ == "__main__":
         Wx = dyVz - dzVy
         Wy = dzVx - dxVz
         Wz = dxVy - dyVx
+	print Wx.mean()
+	print Wy.mean()
+	print Wz.mean()
+
+
 
         Enstrophy = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
         sum_x = np.sum(Enstrophy)*dx*dy*dz
