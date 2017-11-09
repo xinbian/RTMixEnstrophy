@@ -129,7 +129,7 @@ for istep in step:
 			vorz = np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
 		enstropy[seq] = 0.5*np.sum(vorx**2+vory**2+vorz**2)*dx*dy*dz 
 	
-		seq += 1
+	seq += 1
 
 #nomalize pe/calcuate losed pe to this time
 pe = pe*dx*dy*dz
