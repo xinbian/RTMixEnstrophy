@@ -23,6 +23,7 @@ g=1.0
 inFile="tests_single.h5"
 Lz=3.2
 waveLen = 0.4
+mu = 0.00005
 CFDmethod = False
 outPut = True
 #input done
@@ -58,6 +59,7 @@ ke = np.zeros(len(step))
 pe = np.zeros(len(step))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
+dissRate = np.zeros(len(step))
 
 if CFDmethod:
 	CFD_x = Create_matrix_fd2(nx) / dx
@@ -123,8 +125,23 @@ for istep in step:
 	        Wx = dyVz - dzVy
 	        Wy = dzVx - dxVz
 	        Wz = dxVy - dyVx
+		
+		Sxx = dxVx
+		Sxy = (dxVy + dyVx)/2.0
+		Sxz = (dzVx + dxVz)/2.0
+		Syy = dyVy
+		Syz = (dzVy + dyVz)/2.0
+		Szz = dzVz
+		
+		if nx == 1:
+			ndim = 2.0
+		else:
+			ndim = 3.0
+			
 	        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
+		dissRate[seq] = 2*mu*(Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
+				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim)
 	else:
 		dyVx = np.gradient(vx, dy, axis=1)
 	        dzVx = np.gradient(vx, dz, axis=0)
@@ -137,13 +154,25 @@ for istep in step:
 		dyVy = np.gradient(vy, dy, axis=1)
 		dzVz = np.gradient(vz, dz, axis=0)
 	
+		Wx = dyVz - dzVy
+		Wy = dzVx - dxVz
+		Wz = dxVy - dyVx
+		
+		Sxx = dxVx
+		Sxy = (dxVy + dyVx)/2.0
+		Sxz = (dzVx + dxVz)/2.0
+		Syy = dyVy
+		Syz = (dzVy + dyVz)/2.0
+		Szz = dzVz
+		
 		
 		if nx == 1:
-			Wx = dyVz - dzVy
+			ndim = 2.0
 		else:
-			Wx = dyVz - dzVy
-			Wy = dzVx - dxVz
-			Wz = dxVy - dyVx
+			ndim = 3.0
+			
+		dissRate[seq] = 2*mu*(Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
+				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim)			
 		enstropy[seq] = 0.5*np.sum(Wx**2+Wy**2+Wz**2)*dx*dy*dz 
 	
 	seq += 1
@@ -153,7 +182,7 @@ pe = pe*dx*dy*dz
 #normalize h
 h=h*dz/waveLen
 #output
-all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x))
+all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x, dissRate))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 		
 
