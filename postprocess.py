@@ -56,9 +56,6 @@ h = np.zeros(len(step))
 ie = np.zeros(len(step))
 ke = np.zeros(len(step))
 pe = np.zeros(len(step))
-vorx = np.zeros((nz, ny, nx))
-vory = np.zeros((nz, ny, nx))
-vorz = np.zeros((nz, ny, nx))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
 
@@ -118,19 +115,36 @@ for istep in step:
 	        dzVy = calc_z_deri(vy, CFD_z)
 	        dxVz = calc_x_deri(vz, CFD_x)
 	        dyVz = calc_y_deri(vz, CFD_y)
+		
+		dxVx = calc_x_deri(vx, CFD_x)
+		dyVy = calc_y_deri(vy, CFD_y)
+		dzVz = calc_z_deri(vz, CFD_z)
+		
 	        Wx = dyVz - dzVy
 	        Wy = dzVx - dxVz
 	        Wz = dxVy - dyVx
 	        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 	else:
+		dyVx = np.gradient(vx, dy, axis=1)
+	        dzVx = np.gradient(vx, dz, axis=0)
+	        dxVy = np.gradient(vy, dx, axis=2)
+	        dzVy = np.gradient(vy, dz, axis=0)
+	        dxVz = np.gradient(vz, dx, axis=2)
+	        dyVz = np.gradient(vz, dy, axis=1)
+		
+		dxVx = np.gradient(vx, dx, axis=2)
+		dyVy = np.gradient(vy, dy, axis=1)
+		dzVz = np.gradient(vz, dz, axis=0)
+	
+		
 		if nx == 1:
-			vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
+			Wx = dyVz - dzVy
 		else:
-			vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
-			vory = np.gradient(vx, dz, axis=0) - np.gradient(vz, dz, axis=2)
-			vorz = np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
-		enstropy[seq] = 0.5*np.sum(vorx**2+vory**2+vorz**2)*dx*dy*dz 
+			Wx = dyVz - dzVy
+			Wy = dzVx - dxVz
+			Wz = dxVy - dyVx
+		enstropy[seq] = 0.5*np.sum(Wx**2+Wy**2+Wz**2)*dx*dy*dz 
 	
 	seq += 1
 
@@ -141,6 +155,7 @@ h=h*dz/waveLen
 #output
 all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
+		
 
 h5file.close()
 
