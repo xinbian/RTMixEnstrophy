@@ -23,7 +23,11 @@ g=1.0
 inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
+<<<<<<< HEAD
 mu =1.13137E-4
+=======
+mu = 0.00005
+>>>>>>> 63832737c8b8c807fc9c243eeac2166faffeb92c
 CFDmethod = True
 outPut = False
 #input done
