@@ -23,9 +23,9 @@ g=1.0
 inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
-mu = 0.00005
-CFDmethod = False
-outPut = True
+mu =1.13137E-4
+CFDmethod = True
+outPut = False
 #input done
 
 mylist = [parentDir,'/',inFile]
@@ -46,11 +46,11 @@ nx=m1.shape[2]
 dz=dy=dx=Lz/nz
 if nx == 1:
 	dx=1.0
-specout = 2000
+specout = 500
 skip = 10
 seq = 0
 step = []
-for i in range(600000/2000):
+for i in range(34706/500):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
@@ -76,8 +76,8 @@ for istep in step:
 	rho = np.array(databk)
 	x=np.zeros((nz, ny, nx))
 	xMean=np.zeros(nz)
-	rhoL = 1.0
-	rhoH = 1.0833
+	rhoL = 0.6
+	rhoH = 1.0
 	x=(rho-rhoL)/(rhoH-rhoL)
 	xMean=x.reshape(nz, ny*nx).mean(axis=1)
 	for i in range(nz):
@@ -140,8 +140,8 @@ for istep in step:
 			
 	        EnstrophyCFD = 0.5*(np.multiply(Wx,Wx)+np.multiply(Wy,Wy)+np.multiply(Wz,Wz))
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
-		dissRate[seq] = 2*mu*(Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
-				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim)
+		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
+				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
 	else:
 		dyVx = np.gradient(vx, dy, axis=1)
 	        dzVx = np.gradient(vx, dz, axis=0)
@@ -170,9 +170,9 @@ for istep in step:
 			ndim = 2.0
 		else:
 			ndim = 3.0
-			
-		dissRate[seq] = 2*mu*(Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
-				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim)			
+		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
+				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
+		
 		enstropy[seq] = 0.5*np.sum(Wx**2+Wy**2+Wz**2)*dx*dy*dz 
 	
 	seq += 1
