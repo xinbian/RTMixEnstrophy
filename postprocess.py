@@ -20,7 +20,7 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 #specify inout parameters here
 gamma=5.0/3.0
 g=1.0
-inFile="tests_single.h5"
+inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
 mu = 0.00005
