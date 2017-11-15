@@ -22,15 +22,17 @@ gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
 Lz=3.2
+rhoL = 0.6
+rhoH = 1.0
 waveLen = 0.4
-<<<<<<< HEAD
 mu =1.13137E-4
-=======
-mu = 0.00005
->>>>>>> 63832737c8b8c807fc9c243eeac2166faffeb92c
 CFDmethod = True
 outPut = False
-#input done
+specout = 500
+skip = 10
+totalsteps = 34706
+
+#####input done
 
 mylist = [parentDir,'/',inFile]
 delimiter = ''
@@ -47,15 +49,18 @@ nz=m1.shape[0]
 ny=m1.shape[1]
 nx=m1.shape[2]
 
+
+rho_avr=np.zeros(nz, dtype=np.float64)   
+
 dz=dy=dx=Lz/nz
 if nx == 1:
 	dx=1.0
-specout = 500
-skip = 10
+
 seq = 0
 step = []
-for i in range(34706/500):
+for i in range(totalsteps/specout):
     step.append(str((i+1)*specout).zfill(6))
+
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
 ie = np.zeros(len(step))
@@ -64,6 +69,16 @@ pe = np.zeros(len(step))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
 dissRate = np.zeros(len(step))
+
+bub_loc_all = np.zeros(len(step))
+bub_loc_all_ori = np.zeros(len(step))
+sp_loc_all = np.zeros(len(step))
+bub_velo_all = np.zeros(len(step))
+bub_velo_all_aver = np.zeros(len(step))
+sp_velo_all = np.zeros(len(step))
+bub_velo_all_ori = np.zeros(len(step))
+
+
 
 if CFDmethod:
 	CFD_x = Create_matrix_fd2(nx) / dx
@@ -80,8 +95,6 @@ for istep in step:
 	rho = np.array(databk)
 	x=np.zeros((nz, ny, nx))
 	xMean=np.zeros(nz)
-	rhoL = 0.6
-	rhoH = 1.0
 	x=(rho-rhoL)/(rhoH-rhoL)
 	xMean=x.reshape(nz, ny*nx).mean(axis=1)
 	for i in range(nz):
@@ -178,17 +191,100 @@ for istep in step:
 				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
 		
 		enstropy[seq] = 0.5*np.sum(Wx**2+Wy**2+Wz**2)*dx*dy*dz 
+
+
+    mylist = ['Fields/', 'Prho', '/', istep]
+    filepath = delimiter.join(mylist)
+    databk = h5file.get(filepath)
+    np_data = np.array(databk)
+    if nx == 1:
+	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
+    else:
+	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
+	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
+    m2 = np_data[:, 0, 0]
+    m1_filter=m1.copy();    
+    m2_filter=m2.copy();    
+    for jstep in range(2,nz-3):
+        m1_filter[jstep]=(m1[jstep-2]+m1[jstep-1]+m1[jstep]+m1[jstep+1]+m1[jstep+2])/5;
+        m2_filter[jstep]=(m2[jstep-2]+m2[jstep-1]+m2[jstep]+m2[jstep+1]+m2[jstep+2])/5;
+
+    m1_grad = np.gradient(m1)
+    m2_grad = np.gradient(m2)
+
+    m1_grad = high_order_gradient(m1_filter,dx,6)
+    m2_grad = high_order_gradient(m2_filter,dx,6)
+
+
+    sp_loc = np.argmax(m1_grad)
+    bub_loc = np.argmax(m2_grad)
+
+    sp_loc_all[seq] = sp_loc
+    bub_loc_all[seq] = bub_loc
+
+
+    mylist = ['Fields/', 'PVz', '/', istep]
+    filepath = delimiter.join(mylist)
+    databk = h5file.get(filepath)
+    np_data = np.array(databk)
+  
+    #consider 2D/3D case
+    if nx == 1:
+	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
+    else:
+	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
+	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
+    m2 = np_data[:, 0, 0]
+    sp_velo = m1[sp_loc]
+    bub_velo = m2[bub_loc]
+    bub_velo_all[seq] = bub_velo
+    sp_velo_all[seq] = sp_velo
+
 	
 	seq += 1
 
-#nomalize pe/calcuate losed pe to this time
+#normalize pe/calculate lost pe to this time
 pe = pe*dx*dy*dz
+
 #normalize h
 h=h*dz/waveLen
 #output
 all_data = np.column_stack((np.asarray(step),h, ke, pe[0]-pe, ie-ie[0], enstropy, sum_x, dissRate))
 np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
-		
+
+all_data = np.column_stack((bub_loc_all,bub_velo_all,sp_loc_all,sp_velo_all))
+np.savetxt('saved_bub_velo',all_data,delimiter='\t',fmt='%s')
+
+#mixing layer
+
+f=open('rho1d.txt','w')
+
+step=[]
+for i in range(totalsteps/specout+1):
+    step.append(str((i+1)*specout).zfill(6))
+
+
+for ii in range(1,totalsteps+1):
+    f.write("%i \n" % ii)
+    if ii==1:
+        rho_avr[0:nz/2-1]=1
+        rho_avr[nz/2:]=1.0833
+        np.savetxt(f,rho_avr)
+    if ii%specout==0:            
+                  rho_avr=np.zeros(nz, dtype=np.float64)       
+                  delimiter = ''
+                  mylist = ['Fields/','Prho','/',step[ii/specout-1]]
+                  filepath = delimiter.join(mylist)
+                  databk = h5file.get(filepath)
+                  np_data = np.array(databk)
+                  m1=np_data
+                  for i in range(nz):
+                      rho_avr[i]=np.mean(m1[i,:,:])
+                  
+           
+                  np.savetxt(f,rho_avr)
+            
+f.close()
 
 h5file.close()
 
@@ -217,4 +313,4 @@ if outPut:
 #f.close()
     
     
-    
+  
