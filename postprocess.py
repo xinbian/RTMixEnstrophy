@@ -159,7 +159,7 @@ for istep in step:
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
 				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
-	else:
+	if True:
 		dyVx = np.gradient(vx, dy, axis=1)
 	        dzVx = np.gradient(vx, dz, axis=0)
 	        dxVy = np.gradient(vy, dx, axis=2)
@@ -187,62 +187,60 @@ for istep in step:
 			ndim = 2.0
 		else:
 			ndim = 3.0
-		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
-				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
 		
 		enstropy[seq] = 0.5*np.sum(Wx**2+Wy**2+Wz**2)*dx*dy*dz 
 
 
-    mylist = ['Fields/', 'Prho', '/', istep]
-    filepath = delimiter.join(mylist)
-    databk = h5file.get(filepath)
-    np_data = np.array(databk)
-    if nx == 1:
-	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
-    else:
-	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
-	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
-    m2 = np_data[:, 0, 0]
-    m1_filter=m1.copy();    
-    m2_filter=m2.copy();    
-    for jstep in range(2,nz-3):
-        m1_filter[jstep]=(m1[jstep-2]+m1[jstep-1]+m1[jstep]+m1[jstep+1]+m1[jstep+2])/5;
-        m2_filter[jstep]=(m2[jstep-2]+m2[jstep-1]+m2[jstep]+m2[jstep+1]+m2[jstep+2])/5;
-
-    m1_grad = np.gradient(m1)
-    m2_grad = np.gradient(m2)
-
-    m1_grad = high_order_gradient(m1_filter,dx,6)
-    m2_grad = high_order_gradient(m2_filter,dx,6)
-
-
-    sp_loc = np.argmax(m1_grad)
-    bub_loc = np.argmax(m2_grad)
-
-    sp_loc_all[seq] = sp_loc
-    bub_loc_all[seq] = bub_loc
-
-
-    mylist = ['Fields/', 'PVz', '/', istep]
-    filepath = delimiter.join(mylist)
-    databk = h5file.get(filepath)
-    np_data = np.array(databk)
-  
-    #consider 2D/3D case
-    if nx == 1:
-	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
-    else:
-	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
-	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
-    m2 = np_data[:, 0, 0]
-    sp_velo = m1[sp_loc]
-    bub_velo = m2[bub_loc]
-    bub_velo_all[seq] = bub_velo
-    sp_velo_all[seq] = sp_velo
-
-	
-    seq += 1
-
+        mylist = ['Fields/', 'Prho', '/', istep]
+        filepath = delimiter.join(mylist)
+        databk = h5file.get(filepath)
+        np_data = np.array(databk)
+        if nx == 1:
+    	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
+        else:
+    	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
+    	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
+        m2 = np_data[:, 0, 0]
+        m1_filter=m1.copy();    
+        m2_filter=m2.copy();    
+        for jstep in range(2,nz-3):
+            m1_filter[jstep]=(m1[jstep-2]+m1[jstep-1]+m1[jstep]+m1[jstep+1]+m1[jstep+2])/5;
+            m2_filter[jstep]=(m2[jstep-2]+m2[jstep-1]+m2[jstep]+m2[jstep+1]+m2[jstep+2])/5;
+    
+        m1_grad = np.gradient(m1)
+        m2_grad = np.gradient(m2)
+    
+        m1_grad = high_order_gradient(m1_filter,dx,6)
+        m2_grad = high_order_gradient(m2_filter,dx,6)
+    
+    
+        sp_loc = np.argmax(m1_grad)
+        bub_loc = np.argmax(m2_grad)
+    
+        sp_loc_all[seq] = sp_loc
+        bub_loc_all[seq] = bub_loc
+    
+    
+        mylist = ['Fields/', 'PVz', '/', istep]
+        filepath = delimiter.join(mylist)
+        databk = h5file.get(filepath)
+        np_data = np.array(databk)
+      
+        #consider 2D/3D case
+        if nx == 1:
+    	    m1 = (np_data[:, ny/2-1, 0] + np_data[:, ny/2, 0] )/2
+        else:
+    	    m1 = (np_data[:, ny/2-1, nx/2-1] + np_data[:, ny/2, nx/2] 
+    	  + np_data[:, ny/2-1, nx/2] + np_data[:, ny/2, nx/2-1])/4.0
+        m2 = np_data[:, 0, 0]
+        sp_velo = m1[sp_loc]
+        bub_velo = m2[bub_loc]
+        bub_velo_all[seq] = bub_velo
+        sp_velo_all[seq] = sp_velo
+    
+    	
+        seq += 1
+    
 #normalize pe/calculate lost pe to this time
 pe = pe*dx*dy*dz
 
