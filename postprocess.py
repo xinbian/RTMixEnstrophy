@@ -241,7 +241,7 @@ for istep in step:
     sp_velo_all[seq] = sp_velo
 
 	
-	seq += 1
+    seq += 1
 
 #normalize pe/calculate lost pe to this time
 pe = pe*dx*dy*dz
