@@ -265,8 +265,8 @@ for i in range(totalsteps/specout+1):
 for ii in range(1,totalsteps+1):
     f.write("%i \n" % ii)
     if ii==1:
-        rho_avr[0:nz/2-1]=1
-        rho_avr[nz/2:]=1.0833
+        rho_avr[0:nz/2-1]=rhoL
+        rho_avr[nz/2:]=rhoH
         np.savetxt(f,rho_avr)
     if ii%specout==0:            
                   rho_avr=np.zeros(nz, dtype=np.float64)       
