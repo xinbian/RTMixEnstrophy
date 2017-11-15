@@ -24,8 +24,8 @@ inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
 mu = 0.00005
-CFDmethod = False
-outPut = True
+CFDmethod = True
+outPut = False
 #input done
 
 mylist = [parentDir,'/',inFile]
