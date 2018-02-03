@@ -26,7 +26,8 @@ rhoL = 0.6
 rhoH = 1.0
 waveLen = 0.4
 mu =1.13137E-4
-CFDmethod = True
+CFDmethod = False
+npCalGrad = False
 outPut = False
 specout = 500
 skip = 10
@@ -80,7 +81,7 @@ bub_velo_all_ori = np.zeros(len(step))
 
 
 
-if CFDmethod:
+if CFDmethod == True:
 	CFD_x = Create_matrix_fd2(nx) / dx
 	CFD_y = CFD_x
 	CFD_z = Create_matrix_fd2(nz) / dz
@@ -122,7 +123,7 @@ for istep in step:
 	press = np.array(databk)
 	ie[seq] =np.sum((1/(gamma-1))*press)*dx*dy*dz
 	#enstrophy
-	if CFDmethod:
+	if CFDmethod == True:
 		#CFD method to calc enstrophy
 	        vx = vx.transpose()
 	        vy = vy.transpose()
@@ -159,7 +160,7 @@ for istep in step:
 	        sum_x[seq] = np.sum(EnstrophyCFD)*dx*dy*dz
 		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
 				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
-	if True:
+	if npCalGrad == True:
 		dyVx = np.gradient(vx, dy, axis=1)
 	        dzVx = np.gradient(vx, dz, axis=0)
 	        dxVy = np.gradient(vy, dx, axis=2)
