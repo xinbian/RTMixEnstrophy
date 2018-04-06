@@ -21,7 +21,15 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
+<<<<<<< HEAD
 Lz=3.2
+||||||| merged common ancestors
+Lz=0.8
+=======
+Lz=3.2
+rhoL = 0.6
+rhoH = 1.0
+>>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
 waveLen = 0.4
 mu =1.13137E-4
 CFDmethod = False
@@ -52,13 +60,26 @@ nx=m1.shape[2]
 rho_avr=np.zeros(nz, dtype=np.float64)   
 
 dz=dy=dx=Lz/nz
+<<<<<<< HEAD
 specout = 1000
 skip = 20
+||||||| merged common ancestors
+specout = 500
+skip = 10
+=======
 if nx == 1:
 	dx=1.0
+
+>>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
 seq = 0
 step = []
+<<<<<<< HEAD
+for i in range(839626/1000):
+||||||| merged common ancestors
+for i in range(5):
+=======
 for i in range(totalsteps/specout):
+>>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
     step.append(str((i+1)*specout).zfill(6))
 
 #initialize time dependent mixing layer width, KE, PE, enstropy
@@ -68,10 +89,19 @@ ke = np.zeros(len(step))
 pe = np.zeros(len(step))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
+<<<<<<< HEAD
+dx=1.0
+#CFD_x = Create_matrix_fd2(nx) / dx
 #CFD_y = CFD_x
 #CFD_z = Create_matrix_fd2(nz) / dz
 #
+||||||| merged common ancestors
 
+CFD_x = Create_matrix_fd2(nx) / dx
+CFD_y = CFD_x
+CFD_z = Create_matrix_fd2(nz) / dz
+
+=======
 dissRate = np.zeros(len(step))
 
 bub_loc_all = np.zeros(len(step))
@@ -86,9 +116,10 @@ bub_velo_all_ori = np.zeros(len(step))
 
 if CFDmethod == True:
 	CFD_x = Create_matrix_fd2(nx) / dx
-	CFD_y = Create_matrix_fd2(ny) / dy
+	CFD_y = CFD_x
 	CFD_z = Create_matrix_fd2(nz) / dz
 
+>>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
 
 #calculate mixing layer width
 for istep in step:
@@ -99,7 +130,15 @@ for istep in step:
 	rho = np.array(databk)
 	x=np.zeros((nz, ny, nx))
 	xMean=np.zeros(nz)
-x=(rho-rhoL)/(rhoH-rhoL)
+<<<<<<< HEAD
+	rhoL =1.0 
+	rhoH = 1.0833
+||||||| merged common ancestors
+	rhoL = rho[skip,:, :].mean()
+	rhoH = rho[nz-skip,:, :].mean()
+=======
+>>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
+	x=(rho-rhoL)/(rhoH-rhoL)
 	xMean=x.reshape(nz, ny*nx).mean(axis=1)
 	for i in range(nz):
 		h[seq] = h[seq] + 2*min(xMean[i], 1-xMean[i]) 

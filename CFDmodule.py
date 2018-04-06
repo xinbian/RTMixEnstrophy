@@ -10,6 +10,31 @@ import numpy as np
 import os
 import os.path
 
+
+def high_order_gradient(fx,dx,order):
+    length=len(fx)
+    fxgrad = np.zeros(length)
+    if order==4: 
+        for i in range(2):
+            fxgrad[i]=(-25*fx[i]+48*fx[i+1]-36*fx[i+2]+16*fx[i+3]-3*fx[i+4])/(12*dx)
+        for i in range(2,length-2):
+            fxgrad[i]=(-fx[i+2]+fx[i+1]*8-fx[i-1]*8+fx[i-2])/(12*dx)
+        for i in range(length-2,length):
+            fxgrad[i]=(25*fx[i]-48*fx[i-1]+36*fx[i-2]-16*fx[i-3]+3*fx[i-4])/(12*dx)
+    if order==6:
+        for i in range(3):
+            fxgrad[i]=(-49/20*fx[i]+6*fx[i+1]-15/2*fx[i+2]+20/3*fx[i+3]-15/4*fx[i+4]+6/5*fx[i+5]-1/6*fx[i+6])/(dx)
+        for i in range(3,length-3):
+            fxgrad[i]=(fx[i+3]-9*fx[i+2]+45*fx[i+1]-45*fx[i-1]+9*fx[i-2]-fx[i-3])/(60*dx)
+        for i in range(length-3,length):
+            fxgrad[i]=(49/20*fx[i]-6*fx[i-1]+15/2*fx[i-2]-20/3*fx[i-3]+15/4*fx[i-4]-6/5*fx[i-5]+1/6*fx[i-6])/(dx)
+
+        
+        
+        
+        
+    return fxgrad
+
 def Create_matrix_fd(num):
     v1 = np.concatenate(([5.0, 2.0/11.0], np.ones(num-4)/3.0, [2.0/11.0]))
     B = np.diagflat(v1, 1) + np.diagflat(np.ones(num))
