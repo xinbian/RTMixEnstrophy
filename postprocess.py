@@ -21,7 +21,7 @@ parentDir = os.path.abspath(os.path.join(curDir,os.pardir))
 gamma=5.0/3.0
 g=1.0
 inFile="tests_single_new.h5"
-Lz=0.8
+Lz=3.2
 waveLen = 0.4
 CFDmethod = False
 #input done
@@ -42,11 +42,11 @@ ny=m1.shape[1]
 nx=m1.shape[2]
 
 dz=dy=dx=Lz/nz
-specout = 500
-skip = 10
+specout = 1000
+skip = 20
 seq = 0
 step = []
-for i in range(5):
+for i in range(839626/1000):
     step.append(str((i+1)*specout).zfill(6))
 #initialize time dependent mixing layer width, KE, PE, enstropy
 h = np.zeros(len(step))
@@ -58,11 +58,11 @@ vory = np.zeros((nz, ny, nx))
 vorz = np.zeros((nz, ny, nx))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
-
-CFD_x = Create_matrix_fd2(nx) / dx
-CFD_y = CFD_x
-CFD_z = Create_matrix_fd2(nz) / dz
-
+dx=1.0
+#CFD_x = Create_matrix_fd2(nx) / dx
+#CFD_y = CFD_x
+#CFD_z = Create_matrix_fd2(nz) / dz
+#
 
 #calculate mixing layer width
 for istep in step:
@@ -73,8 +73,8 @@ for istep in step:
 	rho = np.array(databk)
 	x=np.zeros((nz, ny, nx))
 	xMean=np.zeros(nz)
-	rhoL = rho[skip,:, :].mean()
-	rhoH = rho[nz-skip,:, :].mean()
+	rhoL =1.0 
+	rhoH = 1.0833
 	x=(rho-rhoL)/(rhoH-rhoL)
 	xMean=x.reshape(nz, ny*nx).mean(axis=1)
 	for i in range(nz):
@@ -141,24 +141,24 @@ np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 h5file.close()
 
 
-#plt.plot(np.asarray(step),h)
-#plt.title('mixing layer width vs time step')
-#plt.savefig('mix.eps', format='eps', dpi=1000)
-#plt.show()
-#plt.plot(np.asarray(step),ke , label='KE')
-#plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
-#plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
-##plt.plot(np.asarray(step),ke+pe,label='KE+PE')
-#plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
-#plt.title('energy vs time step')
-#pylab.legend(loc='best')
-#plt.savefig('energy.eps', format='eps', dpi=1000)
-#plt.show()
-#plt.plot(np.asarray(step), enstropy)
-#plt.title('enstrophy vs time step')
-#plt.savefig('enstropy.eps', format='eps', dpi=1000)
-#plt.show()
-#
+plt.plot(np.asarray(step),h)
+plt.title('mixing layer width vs time step')
+plt.savefig('mix.eps', format='eps', dpi=1000)
+plt.show()
+plt.plot(np.asarray(step),ke , label='KE')
+plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
+plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
+#plt.plot(np.asarray(step),ke+pe,label='KE+PE')
+plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
+plt.title('energy vs time step')
+pylab.legend(loc='best')
+plt.savefig('energy.eps', format='eps', dpi=1000)
+plt.show()
+plt.plot(np.asarray(step), enstropy)
+plt.title('enstrophy vs time step')
+plt.savefig('enstropy.eps', format='eps', dpi=1000)
+plt.show()
+
 #f = open('output.d','w')
 #for zz_ref in range(nz):
 # f.write("%4s\t%10s\n" % (zz_ref, np.mean(m1[zz_ref,:,:])))
