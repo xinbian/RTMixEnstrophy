@@ -221,9 +221,6 @@ for istep in step:
     mylist = ['new', istep]
     filepath = delimiter.join(mylist)
     new_img.save(filepath,"PNG")
-
-    plt.show()
-
     
     
 
