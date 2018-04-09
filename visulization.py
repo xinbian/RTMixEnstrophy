@@ -220,7 +220,7 @@ for istep in step:
     new_img = Image.blend(ori, mark, 0.5)
     mylist = ['new', istep]
     filepath = delimiter.join(mylist)
-    new_img.save(mylist,"PNG")
+    new_img.save(filepath,"PNG")
 
     plt.show()
 
