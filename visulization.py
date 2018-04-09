@@ -61,8 +61,8 @@ Ly=0.4
 Lz=3.2
 CFDmethod = False
 dz=dy=dx=Lz/nz
-rho_l=1.0
-rho_h=1.0833
+rho_l=0.4
+rho_h=1.6
 rho_inc = (rho_h + rho_l)/2.0
 winPercent = 0.1
 winPoint =  int(winPercent*nz)
@@ -87,7 +87,7 @@ step = []
 totalstep=839626
 for i in range(totalstep/specout):
     step.append(str((i+1)*specout).zfill(6))
-step = ['600000']
+step = ['133000']
 
 bub_loc_all = np.zeros(len(step))
 bub_loc_all_ori = np.zeros(len(step))
@@ -217,6 +217,3 @@ new_img = Image.blend(ori, mark, 0.5)
 new_img.save("new.png","PNG")
 
 plt.show()
-
-    
-    
