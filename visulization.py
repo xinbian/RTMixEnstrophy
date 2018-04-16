@@ -45,11 +45,11 @@ filepath = delimiter.join(mylist)
 h5file = h5py.File(filepath,'r+')
 
 variable = ['PVx','PVy','PVz','PPress', 'Prho']
-mylist = ['Fields/','Prho','/','600000']
+mylist = ['Fields/','Prho','/','002000']
 filepath = delimiter.join(mylist)
 databk = h5file.get(filepath)
 rho = np.array(databk)
-
+print rho.shape
 nz=rho.shape[0]
 ny=rho.shape[1]
 nx=rho.shape[2]
@@ -64,7 +64,7 @@ dz=dy=dx=Lz/nz
 rho_l=1.0
 rho_h=1.0833
 rho_inc = (rho_h + rho_l)/2.0
-winPercent = 0.1
+winPercent = 0.05
 winPoint =  int(winPercent*nz)
 #input done
 
@@ -72,9 +72,6 @@ mylist = [parentDir,'/',inFile]
 delimiter = ''
 filepath = delimiter.join(mylist)
 
-rho = np.transpose(rho)
-rho = np.transpose(np.reshape(rho, (ny,nz)))
-rho_mark = copy.deepcopy(rho)
 horizon_lim = (0, Ly-dy)
 vert_lim = (0, Lz-dz)
 extent=horizon_lim+vert_lim
@@ -82,13 +79,12 @@ extent=horizon_lim+vert_lim
 
 
 dx=1.0
+totalstep=159581
 specout = 1000
-step = []
-totalstep=839626
-for i in range(totalstep/specout):
-    step.append(str((i+1)*specout).zfill(6))
-step = ['600000']
-
+step=[]
+#for i in range(totalstep/specout):
+#    step.append(str((i+1)*specout).zfill(6))
+step=['600000']
 bub_loc_all = np.zeros(len(step))
 bub_loc_all_ori = np.zeros(len(step))
 sp_loc_all = np.zeros(len(step))
@@ -108,6 +104,15 @@ i=0
 test = []
 #calculate bubble and spike location
 for istep in step:
+    print istep
+    mylist = ['Fields/','Prho','/',istep]
+    filepath = delimiter.join(mylist)
+    databk = h5file.get(filepath)
+    rho = np.array(databk)
+    rho = np.transpose(rho)
+    rho = np.transpose(np.reshape(rho, (ny,nz)))
+    rho_mark = copy.deepcopy(rho)
+    
     mylist = ['Fields/', variable[4], '/', istep]
     filepath = delimiter.join(mylist)
     databk = h5file.get(filepath)
@@ -135,7 +140,6 @@ for istep in step:
     bub_loc_all[i] = bub_loc
     
 
-    print 'finish', 100*float(istep)/totalstep,'%'
     
     #obtain velocity 
     
@@ -183,40 +187,43 @@ for istep in step:
             
 
                                    
-                 
-from PIL import Image  
-import matplotlib                
+                   
+    from PIL import Image  
+    import matplotlib                
 
 
-fig_pi = plt.figure(1, figsize = (5*1.214,5.0), dpi=200)
-plt.rc('font', family='serif', size=8)
-plt.imshow(rho, origin='none', extent=horizon_lim+vert_lim, aspect=1,
-           cmap='coolwarm',vmin=rho_l,vmax=rho_h)
-#plt.colorbar()
-plt.savefig('ori.jpg')
-plt.show()
+    fig_pi = plt.figure(1, figsize = (5*1.214,5.0), dpi=200)
+    plt.rc('font', family='serif', size=8)
+    plt.imshow(rho, origin='none', extent=horizon_lim+vert_lim, aspect=1,
+               cmap='coolwarm',vmin=rho_l,vmax=rho_h)
+    #plt.colorbar()
+    plt.savefig('ori.jpg')
+ 
 
 
-cmap = matplotlib.cm.coolwarm
-cmap.set_bad('black',1.)
-fig_mark = plt.figure(1, figsize = (5*1.214,5.0), dpi=200)
-plt.rc('font', family='serif', size=8)
-plt.imshow(rho_mark, origin='none', extent=horizon_lim+vert_lim, aspect=1,
-           cmap=cmap,vmin=rho_l,vmax=rho_h)
-#plt.colorbar()
-plt.savefig('mark.jpg')
-plt.show()
+    cmap = matplotlib.cm.coolwarm
+    cmap.set_bad('black',1.)
+    fig_mark = plt.figure(1, figsize = (5*1.214,5.0), dpi=200)
+    plt.rc('font', family='serif', size=8)
+    plt.imshow(rho_mark, origin='none', extent=horizon_lim+vert_lim, aspect=1,
+               cmap=cmap,vmin=rho_l,vmax=rho_h)
+    #plt.colorbar()
+    plt.savefig('mark.jpg')
+   
 
 
-ori = Image.open("ori.jpg")
-mark = Image.open("mark.jpg")
+    ori = Image.open("ori.jpg")
+    mark = Image.open("mark.jpg")
 
-ori = ori.convert("RGBA")
-mark = mark.convert("RGBA")
-new_img = Image.blend(ori, mark, 0.5)
-new_img.save("new.png","PNG")
-
-plt.show()
+    ori = ori.convert("RGBA")
+    mark = mark.convert("RGBA")
+    new_img = Image.blend(ori, mark, 0.5)
+    mylist = ['new', istep]
+    filepath = delimiter.join(mylist)
+    new_img.save(filepath,"PNG")
+    
+    
 
     
     
+
