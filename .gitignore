@@ -3,4 +3,5 @@ saved*
 *.pyc
 *.png
 *.jpg
+*.swp
 *.eps

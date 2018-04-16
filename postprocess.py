@@ -24,13 +24,15 @@ inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
 mu =1.13137E-4
+#select one if calculate enstrophy
 CFDmethod = False
 npCalGrad = False
+calcEnergy = False
+calcMix = False
 outPut = False
-specout = 500
-skip = 10
-totalsteps = 34706
-
+rhoH = 1.0833
+rhoL = 1.0
+skip = 20
 #####input done
 
 mylist = [parentDir,'/',inFile]
@@ -48,30 +50,51 @@ nz=m1.shape[0]
 ny=m1.shape[1]
 nx=m1.shape[2]
 
+def get_timestepstr(dset):
 
-rho_avr=np.zeros(nz, dtype=np.float64)   
+    return os.path.split(dset.name)[1]
+
+def get_LatestTime(ChkPoints):
+
+    maxtstep = 0
+
+    for grp in ChkPoints:
+        dsets = grp.values()
+	
+	i = 0
+	specout = 0
+        for dset in dsets:
+            dTimestep = int(get_timestepstr(dset))
+            if dTimestep > maxtstep:
+                maxtstep = dTimestep
+		
+	    if i == 2:
+		specout = dTimestep
+	    if i == 3:
+		specout = dTimestep - specout
+            i += 1
+    return maxtstep, specout
+
+FieldPoint = h5file.get('Fields').values()
+totalsteps, specout = get_LatestTime(FieldPoint)
 
 dz=dy=dx=Lz/nz
-specout = 1000
-skip = 20
 if nx == 1:
 	dx=1.0
+
 seq = 0
 step = []
 for i in range(totalsteps/specout):
     step.append(str((i+1)*specout).zfill(6))
 
 #initialize time dependent mixing layer width, KE, PE, enstropy
+rho_avr=np.zeros(nz, dtype=np.float64)   
 h = np.zeros(len(step))
 ie = np.zeros(len(step))
 ke = np.zeros(len(step))
 pe = np.zeros(len(step))
 enstropy = np.zeros(len(step))  
 sum_x = np.zeros(len(step))  
-#CFD_y = CFD_x
-#CFD_z = Create_matrix_fd2(nz) / dz
-#
-
 dissRate = np.zeros(len(step))
 
 bub_loc_all = np.zeros(len(step))
@@ -92,39 +115,39 @@ if CFDmethod == True:
 
 #calculate mixing layer width
 for istep in step:
-	delimiter = ''
-	mylist = ['Fields/',variable[4],'/',istep]
-	filepath = delimiter.join(mylist)
-	databk = h5file.get(filepath)
-	rho = np.array(databk)
-	x=np.zeros((nz, ny, nx))
-	xMean=np.zeros(nz)
-x=(rho-rhoL)/(rhoH-rhoL)
-	xMean=x.reshape(nz, ny*nx).mean(axis=1)
-	for i in range(nz):
-		h[seq] = h[seq] + 2*min(xMean[i], 1-xMean[i]) 
-		#potential energy
-		pe[seq] = pe[seq] + np.sum(rho[i, :, :] * g * i * dz)
- 	#kinetic energy
-	mylist = ['Fields/',variable[0],'/',istep]
-	filepath = delimiter.join(mylist)
-	databk = h5file.get(filepath)
-	vx = np.array(databk)
-	mylist = ['Fields/',variable[1],'/',istep]
-	filepath = delimiter.join(mylist)
-	databk = h5file.get(filepath)
-	vy = np.array(databk)
-	mylist = ['Fields/',variable[2],'/',istep]
-	filepath = delimiter.join(mylist)
-	databk = h5file.get(filepath)
-	vz = np.array(databk)
-	ke[seq] = 0.5 * np.sum((vx**2 + vy**2 + vz**2) * rho)*dx*dy*dz
-	#internal energy
-	mylist = ['Fields/',variable[3],'/',istep]
-	filepath = delimiter.join(mylist)
-	databk = h5file.get(filepath)
-	press = np.array(databk)
-	ie[seq] =np.sum((1/(gamma-1))*press)*dx*dy*dz
+	if calcEnergy == True:
+		mylist = ['Fields/',variable[4],'/',istep]
+		filepath = delimiter.join(mylist)
+		databk = h5file.get(filepath)
+		rho = np.array(databk)
+		x=np.zeros((nz, ny, nx))
+		xMean=np.zeros(nz)
+		x=(rho-rhoL)/(rhoH-rhoL)
+		xMean=x.reshape(nz, ny*nx).mean(axis=1)
+		for i in range(nz):
+			h[seq] = h[seq] + 2*min(xMean[i], 1-xMean[i]) 
+			#potential energy
+			pe[seq] = pe[seq] + np.sum(rho[i, :, :] * g * i * dz)
+	 	#kinetic energy
+		mylist = ['Fields/',variable[0],'/',istep]
+		filepath = delimiter.join(mylist)
+		databk = h5file.get(filepath)
+		vx = np.array(databk)
+		mylist = ['Fields/',variable[1],'/',istep]
+		filepath = delimiter.join(mylist)
+		databk = h5file.get(filepath)
+		vy = np.array(databk)
+		mylist = ['Fields/',variable[2],'/',istep]
+		filepath = delimiter.join(mylist)
+		databk = h5file.get(filepath)
+		vz = np.array(databk)
+		ke[seq] = 0.5 * np.sum((vx**2 + vy**2 + vz**2) * rho)*dx*dy*dz
+		#internal energy
+		mylist = ['Fields/',variable[3],'/',istep]
+		filepath = delimiter.join(mylist)
+		databk = h5file.get(filepath)
+		press = np.array(databk)
+		ie[seq] =np.sum((1/(gamma-1))*press)*dx*dy*dz
 	#enstrophy
 	if CFDmethod == True:
 		#CFD method to calc enstrophy
@@ -211,8 +234,6 @@ x=(rho-rhoL)/(rhoH-rhoL)
             m1_filter[jstep]=(m1[jstep-2]+m1[jstep-1]+m1[jstep]+m1[jstep+1]+m1[jstep+2])/5;
             m2_filter[jstep]=(m2[jstep-2]+m2[jstep-1]+m2[jstep]+m2[jstep+1]+m2[jstep+2])/5;
     
-        m1_grad = np.gradient(m1)
-        m2_grad = np.gradient(m2)
     
         m1_grad = high_order_gradient(m1_filter,dx,6)
         m2_grad = high_order_gradient(m2_filter,dx,6)
@@ -257,37 +278,44 @@ np.savetxt('savedMixAndEnstro', all_data,delimiter='\t',fmt='%s')
 all_data = np.column_stack((bub_loc_all,bub_velo_all,sp_loc_all,sp_velo_all))
 np.savetxt('saved_bub_velo',all_data,delimiter='\t',fmt='%s')
 
+plt.plot(bub_velo_all)
+plt.plot(sp_velo_all)
+plt.savefig('vel.eps', format='eps', dpi=300)
+plt.clf()
+
+plt.plot(bub_loc_all)
+plt.plot(sp_loc_all)
+plt.savefig('loc.eps', format='eps', dpi=300)
+plt.clf()
+
 #mixing layer
-
-f=open('rho1d.txt','w')
-
-step=[]
-for i in range(totalsteps/specout+1):
-    step.append(str((i+1)*specout).zfill(6))
-
-
-for ii in range(1,totalsteps+1):
-    f.write("%i \n" % ii)
-    if ii==1:
-        rho_avr[0:nz/2-1]=rhoL
-        rho_avr[nz/2:]=rhoH
-        np.savetxt(f,rho_avr)
-    if ii%specout==0:            
-                  rho_avr=np.zeros(nz, dtype=np.float64)       
-                  delimiter = ''
-                  mylist = ['Fields/','Prho','/',step[ii/specout-1]]
-                  filepath = delimiter.join(mylist)
-                  databk = h5file.get(filepath)
-                  np_data = np.array(databk)
-                  m1=np_data
-                  for i in range(nz):
-                      rho_avr[i]=np.mean(m1[i,:,:])
-                  
-           
-                  np.savetxt(f,rho_avr)
+if calcMix == True:	
+	f=open('rho1d.txt','w')
+	
+	step=[]
+	for i in range(totalsteps/specout+1):
+	    step.append(str((i+1)*specout).zfill(6))
+	
+	
+	for ii in range(1,totalsteps+1):
+	    f.write("%i \n" % ii)
+	    if ii==1:
+	        rho_avr[0:nz/2-1]=rhoL
+	        rho_avr[nz/2:]=rhoH
+	        np.savetxt(f,rho_avr)
+	    if ii%specout==0:            
+	                  rho_avr=np.zeros(nz, dtype=np.float64)       
+	                  delimiter = ''
+	                  mylist = ['Fields/','Prho','/',step[ii/specout-1]]
+	                  filepath = delimiter.join(mylist)
+	                  databk = h5file.get(filepath)
+	                  np_data = np.array(databk)
+	                  m1=np_data
+	                  for i in range(nz):
+	                      rho_avr[i]=np.mean(m1[i,:,:])
+	                  np.savetxt(f,rho_avr)
             
-f.close()
-
+	f.close()
 h5file.close()
 
 if outPut:
@@ -309,50 +337,25 @@ if outPut:
 	plt.savefig('enstropy.eps', format='eps', dpi=1000)
 	plt.show()
 
-<<<<<<< HEAD
-plt.plot(np.asarray(step),h)
-plt.title('mixing layer width vs time step')
-plt.savefig('mix.eps', format='eps', dpi=1000)
-plt.show()
-plt.plot(np.asarray(step),ke , label='KE')
-plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
-plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
-#plt.plot(np.asarray(step),ke+pe,label='KE+PE')
-plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
-plt.title('energy vs time step')
-pylab.legend(loc='best')
-plt.savefig('energy.eps', format='eps', dpi=1000)
-plt.show()
-plt.plot(np.asarray(step), enstropy)
-plt.title('enstrophy vs time step')
-plt.savefig('enstropy.eps', format='eps', dpi=1000)
-plt.show()
 
-||||||| merged common ancestors
-#plt.plot(np.asarray(step),h)
-#plt.title('mixing layer width vs time step')
-#plt.savefig('mix.eps', format='eps', dpi=1000)
-#plt.show()
-#plt.plot(np.asarray(step),ke , label='KE')
-#plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
-#plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
-##plt.plot(np.asarray(step),ke+pe,label='KE+PE')
-#plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
-#plt.title('energy vs time step')
-#pylab.legend(loc='best')
-#plt.savefig('energy.eps', format='eps', dpi=1000)
-#plt.show()
-#plt.plot(np.asarray(step), enstropy)
-#plt.title('enstrophy vs time step')
-#plt.savefig('enstropy.eps', format='eps', dpi=1000)
-#plt.show()
-#
-=======
->>>>>>> 0c73642c5b132b759ff6b4749430d2678bb96a20
-#f = open('output.d','w')
-#for zz_ref in range(nz):
-# f.write("%4s\t%10s\n" % (zz_ref, np.mean(m1[zz_ref,:,:])))
-#f.close()
-    
-    
-  
+if outPut == True:
+	plt.plot(np.asarray(step),h)
+	plt.title('mixing layer width vs time step')
+	plt.savefig('mix.eps', format='eps', dpi=1000)
+	plt.show()
+	plt.plot(np.asarray(step),ke , label='KE')
+	plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
+	plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
+	#plt.plot(np.asarray(step),ke+pe,label='KE+PE')
+	plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
+	plt.title('energy vs time step')
+	pylab.legend(loc='best')
+	plt.savefig('energy.eps', format='eps', dpi=1000)
+	plt.show()
+	plt.plot(np.asarray(step), enstropy)
+	plt.title('enstrophy vs time step')
+	plt.savefig('enstropy.eps', format='eps', dpi=1000)
+	plt.show()
+	   
+	    
+	  
