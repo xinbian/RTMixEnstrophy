@@ -12,21 +12,22 @@ import numpy as np
 import os
 import os.path
 from CFDmodule import *
+from readStep import *
 
-curfilePath = os.path.abspath(__file__)
-curDir = os.path.abspath(os.path.join(curfilePath,os.pardir))
-parentDir = os.path.abspath(os.path.join(curDir,os.pardir)) 
+#curfilePath = os.path.abspath(__file__)
+#curDir = os.path.abspath(os.path.join(curfilePath,os.pardir))
+#parentDir = os.path.abspath(os.path.join(curDir,os.pardir)) 
 
 #specify inout parameters here
 gamma=5.0/3.0
 g=1.0
-inFile="tests_single_new.h5"
 Lz=3.2
 waveLen = 0.4
 mu =1.13137E-4
 #select one if calculate enstrophy
 CFDmethod = False
 npCalGrad = False
+showPerct = False
 calcEnergy = False
 calcMix = False
 outPut = False
@@ -35,52 +36,13 @@ rhoL = 1.0
 skip = 20
 #####input done
 
-mylist = [parentDir,'/',inFile]
-delimiter = ''
-filepath = delimiter.join(mylist)
-#nz enlarged only 
-variable = ['PVx','PVy','PVz','PPress', 'Prho']
-h5file = h5py.File(filepath,'r+')
-#read dataset dimensions
-mylist = ['Fields/','Prho','/','002000']
-filepath = delimiter.join(mylist)
-databk = h5file.get(filepath)
-m1 = np.array(databk)
-nz=m1.shape[0]
-ny=m1.shape[1]
-nx=m1.shape[2]
+dz=dy=dx=Lz/nz
 
-def get_timestepstr(dset):
-
-    return os.path.split(dset.name)[1]
-
-def get_LatestTime(ChkPoints):
-
-    maxtstep = 0
-
-    for grp in ChkPoints:
-        dsets = grp.values()
-	
-	i = 0
-	specout = 0
-        for dset in dsets:
-            dTimestep = int(get_timestepstr(dset))
-            if dTimestep > maxtstep:
-                maxtstep = dTimestep
-		
-	    if i == 2:
-		specout = dTimestep
-	    if i == 3:
-		specout = dTimestep - specout
-            i += 1
-    return maxtstep, specout
+if nx == 1:
+    dx=1.0
 
 FieldPoint = h5file.get('Fields').values()
 totalsteps, specout = get_LatestTime(FieldPoint)
-
-dz=dy=dx=Lz/nz
-if nx == 1:
-	dx=1.0
 
 seq = 0
 step = []
@@ -115,6 +77,8 @@ if CFDmethod == True:
 
 #calculate mixing layer width
 for istep in step:
+	if showPerct == True:
+		print "doing", float(istep)/totalsteps*100, "%"
 	if calcEnergy == True:
 		mylist = ['Fields/',variable[4],'/',istep]
 		filepath = delimiter.join(mylist)

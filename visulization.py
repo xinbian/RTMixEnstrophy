@@ -11,48 +11,11 @@ import numpy as np
 import os
 import os.path
 import copy
+from CFDmodule import *
+from readStep import *
 
-curfilePath = os.path.abspath(__file__)
-curDir = os.path.abspath(os.path.join(curfilePath,os.pardir))
-parentDir = os.path.abspath(os.path.join(curDir,os.pardir)) 
 
-def high_order_gradient(fx,dx,order):
-    length=len(fx)
-    fxgrad = np.zeros(length)
-    if order==4: 
-        for i in range(2):
-            fxgrad[i]=(-25*fx[i]+48*fx[i+1]-36*fx[i+2]+16*fx[i+3]-3*fx[i+4])/(12*dx)
-        for i in range(2,length-2):
-            fxgrad[i]=(-fx[i+2]+fx[i+1]*8-fx[i-1]*8+fx[i-2])/(12*dx)
-        for i in range(length-2,length):
-            fxgrad[i]=(25*fx[i]-48*fx[i-1]+36*fx[i-2]-16*fx[i-3]+3*fx[i-4])/(12*dx)
-    if order==6:
-        for i in range(3):
-            fxgrad[i]=(-49/20*fx[i]+6*fx[i+1]-15/2*fx[i+2]+20/3*fx[i+3]-15/4*fx[i+4]+6/5*fx[i+5]-1/6*fx[i+6])/(dx)
-        for i in range(3,length-3):
-            fxgrad[i]=(fx[i+3]-9*fx[i+2]+45*fx[i+1]-45*fx[i-1]+9*fx[i-2]-fx[i-3])/(60*dx)
-        for i in range(length-3,length):
-            fxgrad[i]=(49/20*fx[i]-6*fx[i-1]+15/2*fx[i-2]-20/3*fx[i-3]+15/4*fx[i-4]-6/5*fx[i-5]+1/6*fx[i-6])/(dx)
 
-        
-    return fxgrad
-
-inFile="tests_single_new.h5"
-mylist = [parentDir,'/',inFile]
-delimiter = ''
-filepath = delimiter.join(mylist)
-#nz enlarged only 
-h5file = h5py.File(filepath,'r+')
-
-variable = ['PVx','PVy','PVz','PPress', 'Prho']
-mylist = ['Fields/','Prho','/','002000']
-filepath = delimiter.join(mylist)
-databk = h5file.get(filepath)
-rho = np.array(databk)
-print rho.shape
-nz=rho.shape[0]
-ny=rho.shape[1]
-nx=rho.shape[2]
 #specify inout parameters here
 gamma=5.0/3.0
 g=1.0
@@ -60,25 +23,27 @@ inFile="tests_single_new.h5"
 Ly=0.4
 Lz=3.2
 CFDmethod = False
-dz=dy=dx=Lz/nz
 rho_l=0.4
 rho_h=1.6
 rho_inc = (rho_h + rho_l)/2.0
 winPercent = 0.05
 winPoint =  int(winPercent*nz)
 #input done
+variable = ['PVx','PVy','PVz','PPress', 'Prho']
+dz=dy=dx=Lz/nz
 
-mylist = [parentDir,'/',inFile]
-delimiter = ''
-filepath = delimiter.join(mylist)
+if nx == 1:
+    dx=1.0
+
 
 horizon_lim = (0, Ly-dy)
 vert_lim = (0, Lz-dz)
 extent=horizon_lim+vert_lim
 
 
+FieldPoint = h5file.get('Fields').values()
+totalsteps, specout = get_LatestTime(FieldPoint)
 
-dx=1.0
 step = []
 totalstep=4000
 specout=2000
