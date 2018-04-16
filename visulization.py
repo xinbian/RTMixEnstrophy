@@ -80,7 +80,8 @@ extent=horizon_lim+vert_lim
 
 dx=1.0
 step = []
-totalstep=839626
+totalstep=4000
+specout=2000
 for i in range(totalstep/specout):
     step.append(str((i+1)*specout).zfill(6))
 
