@@ -45,10 +45,11 @@ FieldPoint = h5file.get('Fields').values()
 totalsteps, specout = get_LatestTime(FieldPoint)
 
 step = []
-totalstep=4000
-specout=2000
+#totalstep=4000
+#specout=2000
 for i in range(totalstep/specout):
     step.append(str((i+1)*specout).zfill(6))
+
 
 bub_loc_all = np.zeros(len(step))
 bub_loc_all_ori = np.zeros(len(step))
