@@ -244,6 +244,7 @@ np.savetxt('saved_bub_velo',all_data,delimiter='\t',fmt='%s')
 
 plt.plot(bub_velo_all)
 plt.plot(sp_velo_all)
+plt.show()
 plt.savefig('vel.eps', format='eps', dpi=300)
 plt.clf()
 
@@ -282,24 +283,6 @@ if calcMix == True:
 	f.close()
 h5file.close()
 
-if outPut:
-	plt.plot(np.asarray(step),h)
-	plt.title('mixing layer width vs time step')
-	plt.savefig('mix.eps', format='eps', dpi=1000)
-	plt.show()
-	plt.plot(np.asarray(step),ke , label='KE')
-	plt.plot(np.asarray(step),pe[0]-pe, label='released PE')
-	plt.plot(np.asarray(step),ie-ie[0], label='increased IE')
-	plt.plot(np.asarray(step),ke+pe,label='KE+PE')
-	plt.plot(np.asarray(step),pe[0]-pe-(ie-ie[0]), label='released PE -increased IE')
-	plt.title('energy vs time step')
-	pylab.legend(loc='best')
-	plt.savefig('energy.eps', format='eps', dpi=1000)
-	plt.show()
-	plt.plot(np.asarray(step), enstropy)
-	plt.title('enstrophy vs time step')
-	plt.savefig('enstropy.eps', format='eps', dpi=1000)
-	plt.show()
 
 
 if outPut == True:
