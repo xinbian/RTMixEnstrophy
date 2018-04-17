@@ -7,6 +7,7 @@ https://search.proquest.com/docview/194682903?pq-origsite=gscholar
 """
 import pylab
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
 import h5py
 import numpy as np
 import os
@@ -244,7 +245,6 @@ np.savetxt('saved_bub_velo',all_data,delimiter='\t',fmt='%s')
 
 plt.plot(bub_velo_all)
 plt.plot(sp_velo_all)
-plt.show()
 plt.savefig('vel.eps', format='eps', dpi=300)
 plt.clf()
 
