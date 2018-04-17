@@ -5,9 +5,11 @@ mixing layer defination:
 https://search.proquest.com/docview/194682903?pq-origsite=gscholar
 @author: Xin
 """
+import matplotlib
+matplotlib.use('Agg')
 import pylab
 import matplotlib.pyplot as plt
-matplotlib.use('Agg')
+import matplotlib
 import h5py
 import numpy as np
 import os
