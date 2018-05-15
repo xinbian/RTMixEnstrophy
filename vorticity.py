@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-To calculate enstrophy behind bubble and spike,
-mixing layer defination:
-https://search.proquest.com/docview/194682903?pq-origsite=gscholar
 @author: Xin
 """
 import pylab
@@ -11,40 +8,73 @@ import h5py
 import numpy as np
 import os
 import os.path
-from CFDmodule import *
-from readStep import *
+
+curfilePath = os.path.abspath(__file__)
+curDir = os.path.abspath(os.path.join(curfilePath,os.pardir))
+parentDir = os.path.abspath(os.path.join(curDir,os.pardir)) 
+
+def high_order_gradient(fx,dx,order):
+    length=len(fx)
+    fxgrad = np.zeros(length)
+    if order==4: 
+        for i in range(2):
+            fxgrad[i]=(-25*fx[i]+48*fx[i+1]-36*fx[i+2]+16*fx[i+3]-3*fx[i+4])/(12*dx)
+        for i in range(2,length-2):
+            fxgrad[i]=(-fx[i+2]+fx[i+1]*8-fx[i-1]*8+fx[i-2])/(12*dx)
+        for i in range(length-2,length):
+            fxgrad[i]=(25*fx[i]-48*fx[i-1]+36*fx[i-2]-16*fx[i-3]+3*fx[i-4])/(12*dx)
+    if order==6:
+        for i in range(3):
+            fxgrad[i]=(-49/20*fx[i]+6*fx[i+1]-15/2*fx[i+2]+20/3*fx[i+3]-15/4*fx[i+4]+6/5*fx[i+5]-1/6*fx[i+6])/(dx)
+        for i in range(3,length-3):
+            fxgrad[i]=(fx[i+3]-9*fx[i+2]+45*fx[i+1]-45*fx[i-1]+9*fx[i-2]-fx[i-3])/(60*dx)
+        for i in range(length-3,length):
+            fxgrad[i]=(49/20*fx[i]-6*fx[i-1]+15/2*fx[i-2]-20/3*fx[i-3]+15/4*fx[i-4]-6/5*fx[i-5]+1/6*fx[i-6])/(dx)
+
+        
+    return fxgrad
 
 
-#specify inout parameters here
+#specify input parameters here
 g=1.0
+inFile="tests_single_new.h5"
 Lz=3.2
 ##maximum average height (grid point)
 #average over how much percent of total height
 winPercent = 0.025
 
-rhoH = 1.0833
-rhoL = 1.0
+rhoH =1.0833
+rhoL =1.0
+rho_inc = (rhoH + rhoL)/2.0
+
 waveLen = 0.4
 #input done
 
-rd = rhoL/rhoH
-k=2*np.pi/waveLen
-rho_inc = (rhoH + rhoL)/2.0
-
+mylist = [parentDir,'/',inFile]
+delimiter = ''
+filepath = delimiter.join(mylist)
 #nz enlarged only 
 variable = ['PVx','PVy','PVz','PPress', 'Prho']
+h5file = h5py.File(filepath,'r')
+#read dataset dimensions
+mylist = ['Fields/','Prho','/','002000']
+filepath = delimiter.join(mylist)
+databk = h5file.get(filepath)
+m1 = np.array(databk)
+nz=m1.shape[0]
+ny=m1.shape[1]
+nx=m1.shape[2]
 
 winPoint =  int(winPercent*nz)
 
 delimiter = ''
 dz=dy=dx=Lz/nz
-if nx == 1:
-	dx = 1.0
 
-FieldPoint = h5file.get('Fields').values()
-totalsteps, specout = get_LatestTime(FieldPoint)
-
-for i in range(totalsteps/specout):
+dx=1.0
+specout = 1000
+step = []
+totalstep=839626
+for i in range(totalstep/specout):
     step.append(str((i+1)*specout).zfill(6))
 
 
@@ -65,6 +95,8 @@ enspk = np.zeros(len(step))
 ensbub2 = np.zeros(len(step))
 enspk2 = np.zeros(len(step))
 
+
+bub_avr_area = np.zeros(len(step))
 
 i=0
 
@@ -97,6 +129,10 @@ for istep in step:
 
     sp_loc_all[i] = sp_loc
     bub_loc_all[i] = bub_loc
+    
+    
+
+
 
     print 'finish', 100*float(istep)/totalstep,'%'
     
@@ -125,7 +161,7 @@ for istep in step:
     bub_velo_all[i] = m1[bub_loc]
     sp_velo_all[i] = m1[sp_loc]
     
-    #cacluate vorticity
+    #calculate vorticity
     if nx == 1:
 		vorx = np.gradient(vz, dz, axis=1) - np.gradient(vy, dz, axis=0)
     else:
@@ -134,11 +170,11 @@ for istep in step:
 		vorz = np.gradient(vy, dz, axis=2) - np.gradient(vx, dz, axis=1)
 
 
-    #set avearging area
+    #set averaging area
     bubRegion = int(bub_loc_all[i] - winPoint)
     spkRegion = int(sp_loc_all[i] + winPoint)
     
-    #calcuate vorticity behind bub 
+    #calculate vorticity behind bub 
     for j in range(ny/2):
     
         for k in reversed(range(nz)):
@@ -146,17 +182,19 @@ for istep in step:
             if (rho_data[k, j, 0] > rho_inc) and (rho_data[k-1, j, 0] < rho_inc):
                 bub_inc_loc = k
                 break
-  
+
         if bub_inc_loc > bubRegion:
             ensbub[i] = ensbub[i] + np.sum(vorx[bubRegion:bub_inc_loc, j, :]**2
                      + vory[bubRegion:bub_inc_loc, j, :]**2
                      + vorz[bubRegion:bub_inc_loc, j, :]**2)*dx*dy*dz 
+
+            bub_avr_area[i] += ( bub_inc_loc - bubRegion)*dx*dy*dz 
                   
                   
                  
                   
                   
-    #calcuate vorticity behind spike             
+    #calculate vorticity behind spike             
     for j in reversed(range(ny/2)):
     
         for k in range(nz):
@@ -183,10 +221,15 @@ for istep in step:
     i = i + 1
 
     
+    
+    
 ensbub = 2 * ensbub
 enspk = 2 * enspk
 
-bubspeed = np.sqrt(1/(3*np.pi)+rd/(1-rd)*ensbub/(4*np.pi*k*g))
+bub_avr_area = 2 * bub_avr_area
+
+
+
 plt.plot(ensbub, label='bub curve')
 plt.plot(ensbub2, label='bub square')
 plt.plot(enspk, label='spk curve')
@@ -195,14 +238,16 @@ pylab.legend(loc='best')
 pylab.savefig('ensaftertip')
 plt.show()
 
-plt.plot(bubspeed)
-
 
 h5file.close()
 
-np.savetxt('bubspeed', bubspeed, delimiter=',')   
+
+
+np.savetxt('bub_avr_area', bub_avr_area, delimiter=',')   
 np.savetxt('bub', ensbub, delimiter=',')     
 np.savetxt('bubsq', ensbub2, delimiter=',')     
 np.savetxt('spk', enspk, delimiter=',')     
 np.savetxt('spksq', enspk2, delimiter=',')     
- 
+
+
+    
