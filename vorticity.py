@@ -41,7 +41,7 @@ inFile="tests_single_new.h5"
 Lz=3.2
 ##maximum average height (grid point)
 #average over how much percent of total height
-winPercent = 0.025
+winPercent = 0.019875
 
 rhoH =1.0833
 rhoL =1.0
@@ -184,11 +184,12 @@ for istep in step:
                 break
 
         if bub_inc_loc > bubRegion:
-            ensbub[i] = ensbub[i] + np.sum(vorx[bubRegion:bub_inc_loc, j, :]**2
-                     + vory[bubRegion:bub_inc_loc, j, :]**2
-                     + vorz[bubRegion:bub_inc_loc, j, :]**2)*dx*dy*dz 
 
-            bub_avr_area[i] += ( bub_inc_loc - bubRegion)*dx*dy*dz 
+            ensbub[i] = ensbub[i] + np.sum(rho_data[bubRegion:bub_inc_loc, j, :]*(vorx[bubRegion:bub_inc_loc, j, :]**2
+                     + vory[bubRegion:bub_inc_loc, j, :]**2
+                     + vorz[bubRegion:bub_inc_loc, j, :]**2))*dx*dy*dz 
+
+            bub_avr_area[i] += np.sum(rho_data[bubRegion:bub_inc_loc, j, :])*dx*dy*dz 
                   
                   
                  
@@ -207,7 +208,7 @@ for istep in step:
             enspk[i] = enspk[i] + np.sum(vorx[spk_inc_loc:spkRegion, j, :]**2
                      + vory[spk_inc_loc:spkRegion, j, :]**2
                      + vorz[spk_inc_loc:spkRegion, j, :]**2)*dx*dy*dz 
-        test.append(spk_inc_loc)
+      
                  
     ensbub2[i] = ensbub2[i] + np.sum(vorx[bubRegion:int(bub_loc_all[i]), :, :]**2
                      + vory[bubRegion:int(bub_loc_all[i]), :, :]**2
@@ -228,6 +229,15 @@ enspk = 2 * enspk
 
 bub_avr_area = 2 * bub_avr_area
 
+omega0 = np.sqrt(ensbub/(2*bub_avr_area))
+
+
+np.savetxt('bub_avr_area', bub_avr_area, delimiter=',')   
+np.savetxt('bub', ensbub, delimiter=',')     
+np.savetxt('bubsq', ensbub2, delimiter=',')     
+np.savetxt('spk', enspk, delimiter=',')     
+np.savetxt('spksq', enspk2, delimiter=',')   
+np.savetxt('omega0', omega0, delimiter=',')    
 
 
 plt.plot(ensbub, label='bub curve')
@@ -240,14 +250,5 @@ plt.show()
 
 
 h5file.close()
-
-
-
-np.savetxt('bub_avr_area', bub_avr_area, delimiter=',')   
-np.savetxt('bub', ensbub, delimiter=',')     
-np.savetxt('bubsq', ensbub2, delimiter=',')     
-np.savetxt('spk', enspk, delimiter=',')     
-np.savetxt('spksq', enspk2, delimiter=',')     
-
 
     
