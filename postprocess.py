@@ -154,31 +154,36 @@ for istep in step:
 		dissRate[seq] = 2*mu*dx*dy*dz*np.sum((Sxx**2 + Sxy**2 + Sxz**2 + Sxy**2 + Syy**2 + Syz**2 + \
 				Sxz**2 + Syz**2 + Szz**2 - (Sxx**2 + Syy**2 + Szz**2)/ndim))
 	if npCalGrad == True:
-		dyVx = np.gradient(vx, dy, axis=1)
-	        dzVx = np.gradient(vx, dz, axis=0)
-	        dxVy = np.gradient(vy, dx, axis=2)
-	        dzVy = np.gradient(vy, dz, axis=0)
-	        dxVz = np.gradient(vz, dx, axis=2)
-	        dyVz = np.gradient(vz, dy, axis=1)
 		
-		dxVx = np.gradient(vx, dx, axis=2)
-		dyVy = np.gradient(vy, dy, axis=1)
-		dzVz = np.gradient(vz, dz, axis=0)
+		if nx != 1:
+			
+			dyVx = np.gradient(vx, dy, axis=1)
+	      		dzVx = np.gradient(vx, dz, axis=0)
+	       
+	      		dxVz = np.gradient(vz, dx, axis=2)
+	       		dyVz = np.gradient(vz, dy, axis=1)
+			
+			Wy = dzVx - dxVz
+			Wz = dxVy - dyVx
+		
+		dxVy = np.gradient(vy, dx, axis=2)
+	        dzVy = np.gradient(vy, dz, axis=0)
 	
 		Wx = dyVz - dzVy
-		Wy = dzVx - dxVz
-		Wz = dxVy - dyVx
 		
-		Sxx = dxVx
-		Sxy = (dxVy + dyVx)/2.0
-		Sxz = (dzVx + dxVz)/2.0
-		Syy = dyVy
-		Syz = (dzVy + dyVz)/2.0
-		Szz = dzVz
+		
+		#Sxx = dxVx
+		#Sxy = (dxVy + dyVx)/2.0
+		#Sxz = (dzVx + dxVz)/2.0
+		#Syy = dyVy
+		#Syz = (dzVy + dyVz)/2.0
+		#Szz = dzVz
 		
 		
 		if nx == 1:
 			ndim = 2.0
+			Wy = 0
+			Wz = 0
 		else:
 			ndim = 3.0
 		
