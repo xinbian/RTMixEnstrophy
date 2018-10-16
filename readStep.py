@@ -16,7 +16,7 @@ inFile='tests_single_new.h5'
 mylist = [parentDir,'/',inFile]
 delimiter = ''
 filepath = delimiter.join(mylist)
-h5file = h5py.File(filepath,'r+')
+h5file = h5py.File(filepath,'r')
 
 #read dataset dimensions
 mylist = ['Fields/','Prho','/','002000']
