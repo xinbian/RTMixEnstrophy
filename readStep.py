@@ -35,22 +35,20 @@ def get_timestepstr(dset):
 
 def get_LatestTime(ChkPoints):
 
-    maxtstep = 0
-
-    for grp in ChkPoints:
-        dsets = grp.values()
-	
-	i = 0
-	specout = 0
-        for dset in dsets:
-            dTimestep = int(get_timestepstr(dset))
-            if dTimestep > maxtstep:
-                maxtstep = dTimestep
-		
-	    if i == 2:
-		specout = dTimestep
-	    if i == 3:
-		specout = dTimestep - specout
-            i += 1
-    return maxtstep, specout
+	maxtstep = 0
+	for grp in ChkPoints:
+		dsets = grp.values()
+		i = 0
+		specout = 0
+		for dset in dsets:
+			dTimestep = int(get_timestepstr(dset))
+			if dTimestep > maxtstep:
+			    maxtstep = dTimestep
+			    
+			if i == 2:
+			    specout = dTimestep
+			if i == 3:
+			    specout = dTimestep - specout
+			i += 1
+	return maxtstep, specout
 
